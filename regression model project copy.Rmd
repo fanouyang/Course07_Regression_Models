@@ -1,0 +1,71 @@
+---
+title: "Regression model course project"
+output: pdf_document
+author: Fan Ouyang
+---
+## Executive Summary
+In this report, I will examine the mtcars data set and explore how miles per gallon (MPG) is affected by different variables. In particularly, I will answer the following two questions: (1) Is an automatic or manual transmission better for MPG, and (2) Quantify the MPG difference between automatic and manual transmissions.
+
+Parameters of this dataset--mpg : Miles/(US) gallon, cyl : Number of cylinders, disp : Displacement (cu.in.), hp : Gross horsepower, drat : Rear axle ratio, wt : Weight (lb/1000), qsec : 1/4 mile time, vs : V/S, am : Transmission (0 = automatic, 1 = manual), gear : Number of forward gears, carb : Number of carburetors
+
+Results: Manual transmission has an MPG 1.8 greater than an automatic transmission.
+
+## Exploratory Analysis
+```{r}
+library(ggplot2) 
+library(datasets)
+data(mtcars)
+```
+
+## Correlation matrix Analysis
+I explore various relationships between variables of interest in the dataset.
+```{r}
+res <- cor(mtcars)
+round(res, 2)
+symnum(res, abbr.colnames = FALSE)
+```
+The correlation table shows that cyl, disp, hp, drat, wt, vs and am have a strong correlation with mpg. Further summary shows that cyl, disp, wt have the most strongest correlation with mpg.
+
+## Question 1: Is an automatic or manual transmission better for MPG?
+Let’s take a look at the consumption distribution (or MPG distribution) by transmission system :
+```{r}
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$am <- as.factor(mtcars$am)
+boxplot(mpg ~ am, data = mtcars, xlab = "Transmission (0 = automatic, 1 = manual)", ylab="Miles per Gallon")
+```
+There is a difference between automatic and manual distribution systems. Manual distribution systems are mostly less fuel consuming.
+
+## Question 2 : Quantify the MPG difference between automatic and manual transmissions.
+### Regression analysis
+
+I build linear regression models using different variables in order to find the best fit and compare it with the base model.
+```{r}
+initialmodel <- lm(mpg ~ ., data = mtcars)
+basemodel <- lm(mpg ~ am, data = mtcars)
+bestmodel<-lm(mpg ~ cyl+ disp+ wt + am, data = mtcars)
+summary(bestmodel)
+anova(basemodel, bestmodel)
+```
+Results show the p-value obtained is highly significant and we reject the null hypothesis that the confounder variables cyl, disp and wt don’t contribute to the accuracy of the model.
+After computation our best model get an R-squared adjusted of 0.83. wt, hp and cyl are the variables that best explain miles per gallon consumption if we look at the asterix marks.
+
+## Model Residuals and Diagnostics
+In this section, we have the residual plots of our regression model along with computation of regression diagnostics for our liner model. This excercise helped us in examining the residuals and finding leverage points to find any potential problems with the model.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(bestmodel)
+```
+In the residual plot, I don’t see any pattern that causes us to believe that the Fuel consumption could be explained more by any other predictors available in the dataset.
+
+## Statistical Inference
+Two samples t-test on the MPG parameter distinguishing auto vs manual systems. Null hypothesis: There is no difference between MPG means for automatic and manual transmissions.
+
+```{r}
+t.test(mpg ~ am, data = mtcars)
+```
+
+Based on the t-test results, I reject the null hypothesis that the mpg distributions for manual and automatic transmissions are the same. So there are statistically significance between MPG means for automatic and manual transmissions. Manual transmission has an MPG 1.8 greater than an automatic transmission.
+
+## Conclusion
+Using simple linear regression analysis, I conclude that there is a signficant difference between the mean MPG for automatic and manual transmission cars. Manual transmissions achieve a higher value of MPG compared to automatic transmission. This increase is approximately 1.8 MPG when switching from an automatic transmission to a manual one, with all other parameters held constant.
